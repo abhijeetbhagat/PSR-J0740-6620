@@ -1,10 +1,12 @@
 use anyhow::Result;
-use cursive::theme::{BaseColor, BorderStyle, Color, Palette, PaletteColor};
+use cursive::theme::{BaseColor, BorderStyle, Color, ColorStyle, Palette, PaletteColor};
 use cursive::traits::*;
 use cursive::views::{Button, Dialog, EditView, LinearLayout, TextView, ViewRef};
 use std::rc::Rc;
 mod numpad;
-use numpad::Calc;
+use cursive::vec::Vec2;
+use cursive::Printer;
+use numpad::{Calc, Op};
 
 fn main() -> Result<()> {
     let mut siv = cursive::default();
@@ -15,11 +17,35 @@ fn main() -> Result<()> {
         op2: 0,
         op: Op::Add,
         should_clear: false,
+        bin: vec![false; 64],
     };
     siv.set_user_data(state);
 
+    let mut bin_board = LinearLayout::horizontal();
+    for i in 0..64 {
+        bin_board = bin_board.child(
+            Button::new_raw("0", move |s| {
+                let mut button = s.find_name::<Button>(&i.to_string()).unwrap();
+
+                /*
+                let (d, v) = {
+                    let mut data = s.user_data::<Calc>().unwrap();
+                    data.bin[i] = data.bin[i] & 1;
+                    let d = Dialog::text(&format!("val is {}", data.bin[i])).dismiss_button("OK");
+                    (d, data.bin[i])
+                };
+                s.add_layer(d);
+                */
+                let data = s.user_data::<Calc>().unwrap();
+                button.set_label_raw(if data.bin[i] { "0" } else { "1" });
+                data.bin[i] = !data.bin[i];
+            })
+            .with_name(&i.to_string()),
+        );
+    }
+
     let first = LinearLayout::horizontal()
-        .child(Button::new_raw("1", |s| {
+        .child(Button::new_raw(" 1 ", |s| {
             let mut tb: ViewRef<EditView> = s.find_name("input").unwrap();
             let input = &*tb.get_content();
             let mut input = input.clone();
@@ -31,7 +57,7 @@ fn main() -> Result<()> {
 
             tb.set_content(input.as_str());
         }))
-        .child(Button::new_raw("2", |s| {
+        .child(Button::new_raw(" 2 ", |s| {
             let mut tb: ViewRef<EditView> = s.find_name("input").unwrap();
             let input = &*tb.get_content();
             let mut input = input.clone();
@@ -43,7 +69,7 @@ fn main() -> Result<()> {
 
             tb.set_content(input.as_str());
         }))
-        .child(Button::new_raw("3", |s| {
+        .child(Button::new_raw(" 3 ", |s| {
             let mut tb: ViewRef<EditView> = s.find_name("input").unwrap();
             let input = &*tb.get_content();
             let mut input = input.clone();
@@ -55,7 +81,7 @@ fn main() -> Result<()> {
 
             tb.set_content(input.as_str());
         }))
-        .child(Button::new_raw("+", |s| {
+        .child(Button::new_raw(" + ", |s| {
             let tb: ViewRef<EditView> = s.find_name("input").unwrap();
             let input = &*tb.get_content();
             s.with_user_data(|data: &mut Calc| {
@@ -65,7 +91,7 @@ fn main() -> Result<()> {
             });
         }));
     let second = LinearLayout::horizontal()
-        .child(Button::new_raw("4", |s| {
+        .child(Button::new_raw(" 4 ", |s| {
             let mut tb: ViewRef<EditView> = s.find_name("input").unwrap();
             let input = &*tb.get_content();
             let mut input = input.clone();
@@ -77,7 +103,7 @@ fn main() -> Result<()> {
 
             tb.set_content(input.as_str());
         }))
-        .child(Button::new_raw("5", |s| {
+        .child(Button::new_raw(" 5 ", |s| {
             let mut tb: ViewRef<EditView> = s.find_name("input").unwrap();
             let input = &*tb.get_content();
             let mut input = input.clone();
@@ -89,7 +115,7 @@ fn main() -> Result<()> {
 
             tb.set_content(input.as_str());
         }))
-        .child(Button::new_raw("6", |s| {
+        .child(Button::new_raw(" 6 ", |s| {
             let mut tb: ViewRef<EditView> = s.find_name("input").unwrap();
             let input = &*tb.get_content();
             let mut input = input.clone();
@@ -101,7 +127,7 @@ fn main() -> Result<()> {
 
             tb.set_content(input.as_str());
         }))
-        .child(Button::new_raw("-", |s| {
+        .child(Button::new_raw(" - ", |s| {
             let tb: ViewRef<EditView> = s.find_name("input").unwrap();
             let input = &*tb.get_content();
             s.with_user_data(|data: &mut Calc| {
@@ -112,7 +138,7 @@ fn main() -> Result<()> {
         }));
 
     let third = LinearLayout::horizontal()
-        .child(Button::new_raw("7", |s| {
+        .child(Button::new_raw(" 7 ", |s| {
             let mut tb: ViewRef<EditView> = s.find_name("input").unwrap();
             let input = &*tb.get_content();
             let mut input = input.clone();
@@ -124,7 +150,7 @@ fn main() -> Result<()> {
 
             tb.set_content(input.as_str());
         }))
-        .child(Button::new_raw("8", |s| {
+        .child(Button::new_raw(" 8 ", |s| {
             let mut tb: ViewRef<EditView> = s.find_name("input").unwrap();
             let input = &*tb.get_content();
             let mut input = input.clone();
@@ -136,7 +162,7 @@ fn main() -> Result<()> {
 
             tb.set_content(input.as_str());
         }))
-        .child(Button::new_raw("9", |s| {
+        .child(Button::new_raw(" 9 ", |s| {
             let mut tb: ViewRef<EditView> = s.find_name("input").unwrap();
             let input = &*tb.get_content();
             let mut input = input.clone();
@@ -148,7 +174,7 @@ fn main() -> Result<()> {
 
             tb.set_content(input.as_str());
         }))
-        .child(Button::new_raw("*", |s| {
+        .child(Button::new_raw(" * ", |s| {
             let tb: ViewRef<EditView> = s.find_name("input").unwrap();
             let input = &*tb.get_content();
             s.with_user_data(|data: &mut Calc| {
@@ -159,7 +185,7 @@ fn main() -> Result<()> {
         }));
 
     let fourth = LinearLayout::horizontal()
-        .child(Button::new_raw("0", |s| {
+        .child(Button::new_raw(" 0 ", |s| {
             let mut tb: ViewRef<EditView> = s.find_name("input").unwrap();
             let input = &*tb.get_content();
             let mut input = input.clone();
@@ -171,7 +197,7 @@ fn main() -> Result<()> {
 
             tb.set_content(input.as_str());
         }))
-        .child(Button::new_raw("/", |s| {
+        .child(Button::new_raw(" / ", |s| {
             let tb: ViewRef<EditView> = s.find_name("input").unwrap();
             let input = &*tb.get_content();
             s.with_user_data(|data: &mut Calc| {
@@ -180,7 +206,7 @@ fn main() -> Result<()> {
                 data.should_clear = true;
             });
         }))
-        .child(Button::new_raw("=", |s| {
+        .child(Button::new_raw(" = ", |s| {
             let mut theme = s.current_theme().clone();
             theme.borders = BorderStyle::Simple;
             let mut palette = Palette::default();
@@ -200,6 +226,7 @@ fn main() -> Result<()> {
         }));
 
     layout = layout.child(EditView::new().with_name("input").fixed_width(20));
+    layout = layout.child(bin_board);
     layout = layout.child(first);
     layout = layout.child(second);
     layout = layout.child(third);
@@ -211,6 +238,21 @@ fn main() -> Result<()> {
     siv.add_global_callback('q', |s| s.quit());
     siv.run();
     Ok(())
+}
+
+struct TestView {}
+
+impl View for TestView {
+    fn draw(&self, printer: &Printer<'_, '_>) {
+        printer.with_color(
+            ColorStyle::new(Color::Dark(BaseColor::Red), Color::Dark(BaseColor::Black)),
+            |printer| printer.print((0, 0), &format!("{:^4}", "abhi")),
+        );
+    }
+
+    fn required_size(&mut self, _: Vec2) -> Vec2 {
+        (23, 8).into()
+    }
 }
 
 fn calculate(data: &Calc) -> u64 {
