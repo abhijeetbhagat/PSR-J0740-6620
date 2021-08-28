@@ -36,9 +36,22 @@ fn main() -> Result<()> {
                 };
                 s.add_layer(d);
                 */
+
+                let mut tb: ViewRef<EditView> = s.find_name::<EditView>("input").unwrap();
+                let input = &*tb.get_content();
+                let mut input = input.clone();
+                input = "".into();
+
                 let data = s.user_data::<Calc>().unwrap();
                 button.set_label_raw(if data.bin[i] { "0" } else { "1" });
                 data.bin[i] = !data.bin[i];
+                let mut result = 0u64;
+                let mut shft = 0;
+                for idx in (0..64).rev() {
+                    result |= (data.bin[idx] as u64) << shft;
+                    shft += 1;
+                }
+                tb.set_content(&result.to_string());
             })
             .with_name(&i.to_string()),
         );
