@@ -6,7 +6,8 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-crossterm = "0.21.0"
-tui = { version = "0.14.0", features = ["crossterm"], default-features = false }
+#crossterm = "0.21.0"
+#tui = { version = "0.14.0", features = ["crossterm"], default-features = false }
+cursive = "0.16.3"
 anyhow = "*"
 unicode-width = "0.1"
