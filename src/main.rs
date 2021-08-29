@@ -32,6 +32,7 @@ fn main() -> Result<()> {
         .child(Button::new_raw(" C ", |s| display_helper(s, 'C')))
         .child(Button::new_raw(" + ", |s| store_op(s, Op::Add)))
         .child(Button::new_raw(" << ", |s| store_op(s, Op::Lsh)));
+        .child(Button::new_raw(" >> ", |s| store_op(s, Op::Rsh)));
 
     let second = LinearLayout::horizontal()
         .child(Button::new_raw(" 4 ", |s| display_helper(s, '4')))
@@ -39,7 +40,8 @@ fn main() -> Result<()> {
         .child(Button::new_raw(" 6 ", |s| display_helper(s, '6')))
         .child(Button::new_raw(" D ", |s| display_helper(s, 'D')))
         .child(Button::new_raw(" - ", |s| store_op(s, Op::Sub)))
-        .child(Button::new_raw(" >> ", |s| store_op(s, Op::Rsh)));
+        .child(Button::new_raw(" & ", |s| store_op(s, Op::And)));
+        .child(Button::new_raw(" | ", |s| store_op(s, Op::Or)));
 
     let third = LinearLayout::horizontal()
         .child(Button::new_raw(" 7 ", |s| display_helper(s, '7')))
@@ -47,7 +49,6 @@ fn main() -> Result<()> {
         .child(Button::new_raw(" 9 ", |s| display_helper(s, '9')))
         .child(Button::new_raw(" E ", |s| display_helper(s, 'E')))
         .child(Button::new_raw(" * ", |s| store_op(s, Op::Mul)))
-        .child(Button::new_raw(" & ", |s| store_op(s, Op::And)));
 
     let fourth = LinearLayout::horizontal()
         .child(Button::new_raw(" 0 ", |s| display_helper(s, '0')))
