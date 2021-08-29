@@ -23,7 +23,7 @@ fn main() -> Result<()> {
         .child(Button::new_raw(" 1 ", |s| display_helper(s, '1')))
         .child(Button::new_raw(" 2 ", |s| display_helper(s, '2')))
         .child(Button::new_raw(" 3 ", |s| display_helper(s, '3')))
-        .child(Button::new_raw(" C ", |s| display_helper(s, 'C')))
+        .child(Button::new_raw(" C ", |s| display_helper(s, 'C')).with_name("C"))
         .child(Button::new_raw(" + ", |s| store_op(s, Op::Add)))
         .child(Button::new_raw(" << ", |s| store_op(s, Op::Lsh)))
         .child(Button::new_raw(" >> ", |s| store_op(s, Op::Rsh)));
@@ -32,7 +32,7 @@ fn main() -> Result<()> {
         .child(Button::new_raw(" 4 ", |s| display_helper(s, '4')))
         .child(Button::new_raw(" 5 ", |s| display_helper(s, '5')))
         .child(Button::new_raw(" 6 ", |s| display_helper(s, '6')))
-        .child(Button::new_raw(" D ", |s| display_helper(s, 'D')))
+        .child(Button::new_raw(" D ", |s| display_helper(s, 'D')).with_name("D"))
         .child(Button::new_raw(" - ", |s| store_op(s, Op::Sub)))
         .child(Button::new_raw(" & ", |s| store_op(s, Op::And)))
         .child(Button::new_raw(" | ", |s| store_op(s, Op::Or)));
@@ -41,14 +41,14 @@ fn main() -> Result<()> {
         .child(Button::new_raw(" 7 ", |s| display_helper(s, '7')))
         .child(Button::new_raw(" 8 ", |s| display_helper(s, '8')))
         .child(Button::new_raw(" 9 ", |s| display_helper(s, '9')))
-        .child(Button::new_raw(" E ", |s| display_helper(s, 'E')))
+        .child(Button::new_raw(" E ", |s| display_helper(s, 'E')).with_name("E"))
         .child(Button::new_raw(" * ", |s| store_op(s, Op::Mul)));
 
     let fourth = LinearLayout::horizontal()
         .child(Button::new_raw(" 0 ", |s| display_helper(s, '0')))
-        .child(Button::new_raw(" A ", |s| display_helper(s, 'A')))
-        .child(Button::new_raw(" B ", |s| display_helper(s, 'B')))
-        .child(Button::new_raw(" F ", |s| display_helper(s, 'F')))
+        .child(Button::new_raw(" A ", |s| display_helper(s, 'A')).with_name("A"))
+        .child(Button::new_raw(" B ", |s| display_helper(s, 'B')).with_name("B"))
+        .child(Button::new_raw(" F ", |s| display_helper(s, 'F')).with_name("F"))
         .child(Button::new_raw(" / ", |s| store_op(s, Op::Div)))
         .child(Button::new_raw(" = ", |s| perform_calc(s)));
 
@@ -65,7 +65,7 @@ fn main() -> Result<()> {
         .child(Button::new_raw(" AC ", |s| all_clear(s)))
         .child(Button::new_raw(" cp ", |s| cp(s)));
 
-    let mut mode_group: RadioGroup<Mode> = RadioGroup::new();
+    let mut mode_group: RadioGroup<Mode> = RadioGroup::new().on_change(on_mode_change);
     let mode_row = LinearLayout::horizontal()
         .child(mode_group.button(Mode::Hex, "Hex "))
         .child(mode_group.button(Mode::Dec, "Dec "));
@@ -250,4 +250,19 @@ fn cp(s: &mut Cursive) {
     let input = &*tb.get_content();
     let input = input.clone();
     ctx.set_contents(input).unwrap();
+}
+
+fn on_mode_change(s: &mut Cursive, mode: &Mode) {
+    let buttons = ["A", "B", "C", "D", "E", "F"];
+    if *mode == Mode::Dec {
+        for button in buttons.iter() {
+            let mut button: ViewRef<Button> = s.find_name(button).unwrap();
+            button.disable();
+        }
+    } else {
+        for button in buttons.iter() {
+            let mut button: ViewRef<Button> = s.find_name(button).unwrap();
+            button.enable();
+        }
+    }
 }
