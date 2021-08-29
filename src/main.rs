@@ -22,106 +22,46 @@ fn main() -> Result<()> {
     };
     siv.set_user_data(state);
 
-    let mut bin_board_row_1 = LinearLayout::horizontal();
-    for i in 0..32 {
-        bin_board_row_1 = bin_board_row_1.child(
-            Button::new_raw("0", move |s| {
-                bin_board_helper(s, i);
-            })
-            .with_name(&i.to_string()),
-        );
-    }
-
-    let mut bin_board_row_2 = LinearLayout::horizontal();
-    for i in 32..64 {
-        bin_board_row_2 = bin_board_row_2.child(
-            Button::new_raw("0", move |s| {
-                bin_board_helper(s, i);
-            })
-            .with_name(&i.to_string()),
-        );
-    }
+    let bin_board_row_1 = create_bin_board_row(0, 32);
+    let bin_board_row_2 = create_bin_board_row(32, 64);
 
     let first = LinearLayout::horizontal()
         .child(Button::new_raw(" 1 ", |s| display_helper(s, '1')))
         .child(Button::new_raw(" 2 ", |s| display_helper(s, '2')))
         .child(Button::new_raw(" 3 ", |s| display_helper(s, '3')))
         .child(Button::new_raw(" C ", |s| display_helper(s, 'C')))
-        .child(Button::new_raw(" + ", |s| {
-            let tb: ViewRef<EditView> = s.find_name("input").unwrap();
-            let input = &*tb.get_content();
-            s.with_user_data(|data: &mut Calc| {
-                data.op1 = u64::from_str_radix(input, 16).unwrap();
-                data.op = Op::Add;
-                data.should_clear = true;
-            });
-        }));
+        .child(Button::new_raw(" + ", |s| store_op(s, Op::Add)))
+        .child(Button::new_raw(" << ", |s| store_op(s, Op::Lsh)));
+
     let second = LinearLayout::horizontal()
         .child(Button::new_raw(" 4 ", |s| display_helper(s, '4')))
         .child(Button::new_raw(" 5 ", |s| display_helper(s, '5')))
         .child(Button::new_raw(" 6 ", |s| display_helper(s, '6')))
         .child(Button::new_raw(" D ", |s| display_helper(s, 'D')))
-        .child(Button::new_raw(" - ", |s| {
-            let tb: ViewRef<EditView> = s.find_name("input").unwrap();
-            let input = &*tb.get_content();
-            s.with_user_data(|data: &mut Calc| {
-                data.op1 = input.parse().unwrap();
-                data.op = Op::Sub;
-                data.should_clear = true;
-            });
-        }));
+        .child(Button::new_raw(" - ", |s| store_op(s, Op::Sub)))
+        .child(Button::new_raw(" >> ", |s| store_op(s, Op::Rsh)));
 
     let third = LinearLayout::horizontal()
         .child(Button::new_raw(" 7 ", |s| display_helper(s, '7')))
         .child(Button::new_raw(" 8 ", |s| display_helper(s, '8')))
         .child(Button::new_raw(" 9 ", |s| display_helper(s, '9')))
         .child(Button::new_raw(" E ", |s| display_helper(s, 'E')))
-        .child(Button::new_raw(" * ", |s| {
-            let tb: ViewRef<EditView> = s.find_name("input").unwrap();
-            let input = &*tb.get_content();
-            s.with_user_data(|data: &mut Calc| {
-                data.op1 = input.parse().unwrap();
-                data.op = Op::Mul;
-                data.should_clear = true;
-            });
-        }));
+        .child(Button::new_raw(" * ", |s| store_op(s, Op::Mul)))
+        .child(Button::new_raw(" & ", |s| store_op(s, Op::And)));
 
     let fourth = LinearLayout::horizontal()
         .child(Button::new_raw(" 0 ", |s| display_helper(s, '0')))
         .child(Button::new_raw(" A ", |s| display_helper(s, 'A')))
         .child(Button::new_raw(" B ", |s| display_helper(s, 'B')))
         .child(Button::new_raw(" F ", |s| display_helper(s, 'F')))
-        .child(Button::new_raw(" / ", |s| {
-            let tb: ViewRef<EditView> = s.find_name("input").unwrap();
-            let input = &*tb.get_content();
-            s.with_user_data(|data: &mut Calc| {
-                data.op1 = input.parse().unwrap();
-                data.op = Op::Div;
-                data.should_clear = true;
-            });
-        }))
-        .child(Button::new_raw(" = ", |s| {
-            /*
-            let mut theme = s.current_theme().clone();
-            theme.borders = BorderStyle::Simple;
-            let mut palette = Palette::default();
-            palette[PaletteColor::Primary] = Color::Light(BaseColor::Red);
-            palette[PaletteColor::View] = Color::Light(BaseColor::Red);
-            theme.palette = palette;
+        .child(Button::new_raw(" / ", |s| store_op(s, Op::Div)))
+        .child(Button::new_raw(" = ", |s| perform_calc(s)));
 
-            s.set_theme(theme);
-            */
-            let mut tb: ViewRef<EditView> = s.find_name("input").unwrap();
-            let input = &*tb.get_content();
-            let input = input.clone();
-            s.with_user_data(|data: &mut Calc| {
-                data.op2 = u64::from_str_radix(&input, 16).unwrap();
-                data.op1 = calculate(data); // data.op1 + data.op2;
-                tb.set_content(&data.op1.to_string());
-            });
-        }));
+    let input_row = LinearLayout::horizontal()
+        .child(EditView::new().with_name("input").fixed_width(20))
+        .child(Button::new_raw("AC", |s| all_clear(s)));
 
-    layout = layout.child(EditView::new().with_name("input").fixed_width(20));
+    layout = layout.child(input_row);
     layout = layout.child(bin_board_row_1);
     layout = layout.child(TextView::new("63      56      48     40     32"));
     layout = layout.child(bin_board_row_2);
@@ -160,6 +100,11 @@ fn calculate(data: &Calc) -> u64 {
         Op::Sub => data.op1 - data.op2,
         Op::Mul => data.op1 * data.op2,
         Op::Div => data.op1 / data.op2,
+        Op::Lsh => data.op1 << data.op2,
+        Op::Rsh => data.op1 >> data.op2,
+        Op::And => data.op1 & data.op2,
+        Op::Or => data.op1 | data.op2,
+        Op::Not => !data.op1,
     }
 }
 
@@ -201,4 +146,57 @@ fn display_helper(s: &mut Cursive, c: char) {
     input.push(c);
 
     tb.set_content(input.as_str());
+}
+
+fn store_op(s: &mut Cursive, op: Op) {
+    let tb: ViewRef<EditView> = s.find_name("input").unwrap();
+    let input = &*tb.get_content();
+    s.with_user_data(|data: &mut Calc| {
+        data.op1 = input.parse().unwrap();
+        data.op = op;
+        data.should_clear = true;
+    });
+}
+
+fn create_bin_board_row(lsb: usize, msb: usize) -> LinearLayout {
+    let mut bin_board = LinearLayout::horizontal();
+    for i in lsb..msb {
+        bin_board = bin_board.child(
+            Button::new_raw("0", move |s| {
+                bin_board_helper(s, i);
+            })
+            .with_name(&i.to_string()),
+        );
+    }
+    bin_board
+}
+
+fn perform_calc(s: &mut Cursive) {
+    /*
+    let mut theme = s.current_theme().clone();
+    theme.borders = BorderStyle::Simple;
+    let mut palette = Palette::default();
+    palette[PaletteColor::Primary] = Color::Light(BaseColor::Red);
+    palette[PaletteColor::View] = Color::Light(BaseColor::Red);
+    theme.palette = palette;
+
+    s.set_theme(theme);
+    */
+    let mut tb: ViewRef<EditView> = s.find_name("input").unwrap();
+    let input = &*tb.get_content();
+    let input = input.clone();
+    s.with_user_data(|data: &mut Calc| {
+        data.op2 = u64::from_str_radix(&input, 16).unwrap();
+        data.op1 = calculate(data);
+        tb.set_content(&data.op1.to_string());
+    });
+}
+
+fn all_clear(s: &mut Cursive) {
+    let mut tb: ViewRef<EditView> = s.find_name("input").unwrap();
+    s.with_user_data(|data: &mut Calc| {
+        data.op2 = 0;
+        data.op1 = 0;
+        tb.set_content("");
+    });
 }

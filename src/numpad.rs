@@ -6,6 +6,11 @@ pub(crate) enum Op {
     Sub,
     Mul,
     Div,
+    Lsh,
+    Rsh,
+    Not,
+    And,
+    Or,
 }
 
 pub(crate) struct Calc {
