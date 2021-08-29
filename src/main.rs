@@ -120,11 +120,23 @@ fn main() -> Result<()> {
 
             tb.set_content(input.as_str());
         }))
+        .child(Button::new_raw(" C ", |s| {
+            let mut tb: ViewRef<EditView> = s.find_name("input").unwrap();
+            let input = &*tb.get_content();
+            let mut input = input.clone();
+            let state = s.user_data::<Calc>().unwrap();
+            if state.should_clear {
+                input = "".into();
+            }
+            input.push('C');
+
+            tb.set_content(input.as_str());
+        }))
         .child(Button::new_raw(" + ", |s| {
             let tb: ViewRef<EditView> = s.find_name("input").unwrap();
             let input = &*tb.get_content();
             s.with_user_data(|data: &mut Calc| {
-                data.op1 = input.parse().unwrap();
+                data.op1 = u64::from_str_radix(input, 16).unwrap();
                 data.op = Op::Add;
                 data.should_clear = true;
             });
@@ -163,6 +175,18 @@ fn main() -> Result<()> {
                 input = "".into();
             }
             input.push('6');
+
+            tb.set_content(input.as_str());
+        }))
+        .child(Button::new_raw(" D ", |s| {
+            let mut tb: ViewRef<EditView> = s.find_name("input").unwrap();
+            let input = &*tb.get_content();
+            let mut input = input.clone();
+            let state = s.user_data::<Calc>().unwrap();
+            if state.should_clear {
+                input = "".into();
+            }
+            input.push('D');
 
             tb.set_content(input.as_str());
         }))
@@ -213,6 +237,18 @@ fn main() -> Result<()> {
 
             tb.set_content(input.as_str());
         }))
+        .child(Button::new_raw(" E ", |s| {
+            let mut tb: ViewRef<EditView> = s.find_name("input").unwrap();
+            let input = &*tb.get_content();
+            let mut input = input.clone();
+            let state = s.user_data::<Calc>().unwrap();
+            if state.should_clear {
+                input = "".into();
+            }
+            input.push('E');
+
+            tb.set_content(input.as_str());
+        }))
         .child(Button::new_raw(" * ", |s| {
             let tb: ViewRef<EditView> = s.find_name("input").unwrap();
             let input = &*tb.get_content();
@@ -236,6 +272,42 @@ fn main() -> Result<()> {
 
             tb.set_content(input.as_str());
         }))
+        .child(Button::new_raw(" A ", |s| {
+            let mut tb: ViewRef<EditView> = s.find_name("input").unwrap();
+            let input = &*tb.get_content();
+            let mut input = input.clone();
+            let state = s.user_data::<Calc>().unwrap();
+            if state.should_clear {
+                input = "".into();
+            }
+            input.push('A');
+
+            tb.set_content(input.as_str());
+        }))
+        .child(Button::new_raw(" B ", |s| {
+            let mut tb: ViewRef<EditView> = s.find_name("input").unwrap();
+            let input = &*tb.get_content();
+            let mut input = input.clone();
+            let state = s.user_data::<Calc>().unwrap();
+            if state.should_clear {
+                input = "".into();
+            }
+            input.push('B');
+
+            tb.set_content(input.as_str());
+        }))
+        .child(Button::new_raw(" F ", |s| {
+            let mut tb: ViewRef<EditView> = s.find_name("input").unwrap();
+            let input = &*tb.get_content();
+            let mut input = input.clone();
+            let state = s.user_data::<Calc>().unwrap();
+            if state.should_clear {
+                input = "".into();
+            }
+            input.push('F');
+
+            tb.set_content(input.as_str());
+        }))
         .child(Button::new_raw(" / ", |s| {
             let tb: ViewRef<EditView> = s.find_name("input").unwrap();
             let input = &*tb.get_content();
@@ -246,6 +318,7 @@ fn main() -> Result<()> {
             });
         }))
         .child(Button::new_raw(" = ", |s| {
+            /*
             let mut theme = s.current_theme().clone();
             theme.borders = BorderStyle::Simple;
             let mut palette = Palette::default();
@@ -254,11 +327,12 @@ fn main() -> Result<()> {
             theme.palette = palette;
 
             s.set_theme(theme);
+            */
             let mut tb: ViewRef<EditView> = s.find_name("input").unwrap();
             let input = &*tb.get_content();
             let input = input.clone();
             s.with_user_data(|data: &mut Calc| {
-                data.op2 = input.parse().unwrap();
+                data.op2 = u64::from_str_radix(&input, 16).unwrap();
                 data.op1 = calculate(data); // data.op1 + data.op2;
                 tb.set_content(&data.op1.to_string());
             });
