@@ -1,27 +1,20 @@
 use anyhow::Result;
 use cursive::theme::{BaseColor, BorderStyle, Color, ColorStyle, Palette, PaletteColor};
 use cursive::traits::*;
-use cursive::views::{Button, Dialog, EditView, LinearLayout, TextView, ViewRef};
+use cursive::views::{
+    Button, Dialog, EditView, LinearLayout, RadioButton, RadioGroup, TextView, ViewRef,
+};
 use std::rc::Rc;
 mod numpad;
 use clipboard::{ClipboardContext, ClipboardProvider};
 use cursive::vec::Vec2;
 use cursive::Cursive;
 use cursive::Printer;
-use numpad::{Calc, Op};
+use numpad::{Calc, Mode, Op};
 
 fn main() -> Result<()> {
     let mut siv = cursive::default();
     let mut layout = LinearLayout::vertical();
-
-    let state = Calc {
-        op1: 0,
-        op2: 0,
-        op: Op::Add,
-        should_clear: false,
-        bin: vec![false; 64],
-    };
-    siv.set_user_data(state);
 
     let bin_board_row_1 = create_bin_board_row(0, 32);
     let bin_board_row_2 = create_bin_board_row(32, 64);
@@ -72,17 +65,35 @@ fn main() -> Result<()> {
         .child(Button::new_raw(" AC ", |s| all_clear(s)))
         .child(Button::new_raw(" cp ", |s| cp(s)));
 
+    let mut mode_group: RadioGroup<Mode> = RadioGroup::new();
+    let mode_row = LinearLayout::horizontal()
+        .child(mode_group.button(Mode::Hex, "Hex "))
+        .child(mode_group.button(Mode::Dec, "Dec "));
+
     layout = layout.child(input_row);
     layout = layout.child(bin_board_row_1);
     layout = layout.child(TextView::new("63      56      48     40     32"));
     layout = layout.child(bin_board_row_2);
     layout = layout.child(TextView::new("31      24      16     8       0"));
+
+    layout = layout.child(mode_row);
     layout = layout.child(first);
     layout = layout.child(second);
     layout = layout.child(third);
     layout = layout.child(fourth);
     let button = Button::new_raw(" Quit ", |s| s.quit());
     layout = layout.child(button);
+
+    let state = Calc {
+        op1: 0,
+        op2: 0,
+        op: Op::Add,
+        should_clear: false,
+        bin: vec![false; 64],
+        mode_group,
+        mode: Mode::Hex,
+    };
+    siv.set_user_data(state);
 
     siv.add_layer(layout);
     siv.add_global_callback('q', |s| s.quit());
@@ -91,7 +102,6 @@ fn main() -> Result<()> {
     theme.borders = BorderStyle::Simple;
     let mut palette = Palette::default();
     palette[PaletteColor::Primary] = Color::Dark(BaseColor::Black);
-    // palette[PaletteColor::View] = Color::Light(BaseColor::Red);
     palette[PaletteColor::View] = Color::Rgb(77, 255, 195);
     theme.palette = palette;
     siv.set_theme(theme);
@@ -172,11 +182,17 @@ fn display_helper(s: &mut Cursive, c: char) {
 fn store_op(s: &mut Cursive, op: Op) {
     let tb: ViewRef<EditView> = s.find_name("input").unwrap();
     let input = &*tb.get_content();
-    s.with_user_data(|data: &mut Calc| {
-        data.op1 = input.parse().unwrap();
-        data.op = op;
-        data.should_clear = true;
-    });
+    if !input.is_empty() {
+        s.with_user_data(|data: &mut Calc| {
+            data.op1 = if *data.mode_group.selection() == Mode::Hex {
+                u64::from_str_radix(&input, 16).unwrap()
+            } else {
+                input.parse().unwrap()
+            };
+            data.op = op;
+            data.should_clear = true;
+        });
+    }
 }
 
 fn create_bin_board_row(lsb: usize, msb: usize) -> LinearLayout {
@@ -204,10 +220,16 @@ fn perform_calc(s: &mut Cursive) {
     s.set_theme(theme);
     */
     let mut tb: ViewRef<EditView> = s.find_name("input").unwrap();
+    // let hex_button: ViewRef<RadioButton<Mode>> = s.find_name("Hex").unwrap();
+
     let input = &*tb.get_content();
     let input = input.clone();
     s.with_user_data(|data: &mut Calc| {
-        data.op2 = u64::from_str_radix(&input, 16).unwrap();
+        data.op2 = if *data.mode_group.selection() == Mode::Hex {
+            u64::from_str_radix(&input, 16).unwrap()
+        } else {
+            input.parse().unwrap()
+        };
         data.op1 = calculate(data);
         tb.set_content(&data.op1.to_string());
     });
@@ -227,5 +249,5 @@ fn cp(s: &mut Cursive) {
     let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
     let input = &*tb.get_content();
     let input = input.clone();
-    ctx.set_contents(input);
+    ctx.set_contents(input).unwrap();
 }
