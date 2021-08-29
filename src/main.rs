@@ -21,9 +21,9 @@ fn main() -> Result<()> {
     };
     siv.set_user_data(state);
 
-    let mut bin_board = LinearLayout::horizontal();
-    for i in 0..64 {
-        bin_board = bin_board.child(
+    let mut bin_board_row_1 = LinearLayout::horizontal();
+    for i in 0..32 {
+        bin_board_row_1 = bin_board_row_1.child(
             Button::new_raw("0", move |s| {
                 let mut button = s.find_name::<Button>(&i.to_string()).unwrap();
 
@@ -38,18 +38,44 @@ fn main() -> Result<()> {
                 */
 
                 let mut tb: ViewRef<EditView> = s.find_name::<EditView>("input").unwrap();
-                let input = &*tb.get_content();
-                let mut input = input.clone();
-                input = "".into();
 
                 let data = s.user_data::<Calc>().unwrap();
                 button.set_label_raw(if data.bin[i] { "0" } else { "1" });
                 data.bin[i] = !data.bin[i];
                 let mut result = 0u64;
-                let mut shft = 0;
                 for idx in (0..64).rev() {
-                    result |= (data.bin[idx] as u64) << shft;
-                    shft += 1;
+                    result |= (data.bin[idx] as u64) << 63 - idx;
+                }
+                tb.set_content(&result.to_string());
+            })
+            .with_name(&i.to_string()),
+        );
+    }
+
+    let mut bin_board_row_2 = LinearLayout::horizontal();
+    for i in 32..64 {
+        bin_board_row_2 = bin_board_row_2.child(
+            Button::new_raw("0", move |s| {
+                let mut button = s.find_name::<Button>(&i.to_string()).unwrap();
+
+                /*
+                let (d, v) = {
+                    let mut data = s.user_data::<Calc>().unwrap();
+                    data.bin[i] = data.bin[i] & 1;
+                    let d = Dialog::text(&format!("val is {}", data.bin[i])).dismiss_button("OK");
+                    (d, data.bin[i])
+                };
+                s.add_layer(d);
+                */
+
+                let mut tb: ViewRef<EditView> = s.find_name::<EditView>("input").unwrap();
+
+                let data = s.user_data::<Calc>().unwrap();
+                button.set_label_raw(if data.bin[i] { "0" } else { "1" });
+                data.bin[i] = !data.bin[i];
+                let mut result = 0u64;
+                for idx in (0..64).rev() {
+                    result |= (data.bin[idx] as u64) << 63 - idx;
                 }
                 tb.set_content(&result.to_string());
             })
@@ -239,7 +265,10 @@ fn main() -> Result<()> {
         }));
 
     layout = layout.child(EditView::new().with_name("input").fixed_width(20));
-    layout = layout.child(bin_board);
+    layout = layout.child(bin_board_row_1);
+    layout = layout.child(TextView::new("63      56      48     40     32"));
+    layout = layout.child(bin_board_row_2);
+    layout = layout.child(TextView::new("31      24      16     8       0"));
     layout = layout.child(first);
     layout = layout.child(second);
     layout = layout.child(third);
