@@ -20,35 +20,35 @@ fn main() -> Result<()> {
     let bin_board_row_2 = create_bin_board_row(32, 64);
 
     let first = LinearLayout::horizontal()
-        .child(Button::new_raw(" 1 ", |s| display_helper(s, '1')))
-        .child(Button::new_raw(" 2 ", |s| display_helper(s, '2')))
-        .child(Button::new_raw(" 3 ", |s| display_helper(s, '3')))
-        .child(Button::new_raw(" C ", |s| display_helper(s, 'C')).with_name("C"))
+        .child(Button::new_raw(" 1 ", |s| display_char(s, '1')))
+        .child(Button::new_raw(" 2 ", |s| display_char(s, '2')))
+        .child(Button::new_raw(" 3 ", |s| display_char(s, '3')))
+        .child(Button::new_raw(" C ", |s| display_char(s, 'C')).with_name("C"))
         .child(Button::new_raw(" + ", |s| store_op(s, Op::Add)))
         .child(Button::new_raw(" << ", |s| store_op(s, Op::Lsh)))
         .child(Button::new_raw(" >> ", |s| store_op(s, Op::Rsh)));
 
     let second = LinearLayout::horizontal()
-        .child(Button::new_raw(" 4 ", |s| display_helper(s, '4')))
-        .child(Button::new_raw(" 5 ", |s| display_helper(s, '5')))
-        .child(Button::new_raw(" 6 ", |s| display_helper(s, '6')))
-        .child(Button::new_raw(" D ", |s| display_helper(s, 'D')).with_name("D"))
+        .child(Button::new_raw(" 4 ", |s| display_char(s, '4')))
+        .child(Button::new_raw(" 5 ", |s| display_char(s, '5')))
+        .child(Button::new_raw(" 6 ", |s| display_char(s, '6')))
+        .child(Button::new_raw(" D ", |s| display_char(s, 'D')).with_name("D"))
         .child(Button::new_raw(" - ", |s| store_op(s, Op::Sub)))
         .child(Button::new_raw(" & ", |s| store_op(s, Op::And)))
         .child(Button::new_raw(" | ", |s| store_op(s, Op::Or)));
 
     let third = LinearLayout::horizontal()
-        .child(Button::new_raw(" 7 ", |s| display_helper(s, '7')))
-        .child(Button::new_raw(" 8 ", |s| display_helper(s, '8')))
-        .child(Button::new_raw(" 9 ", |s| display_helper(s, '9')))
-        .child(Button::new_raw(" E ", |s| display_helper(s, 'E')).with_name("E"))
+        .child(Button::new_raw(" 7 ", |s| display_char(s, '7')))
+        .child(Button::new_raw(" 8 ", |s| display_char(s, '8')))
+        .child(Button::new_raw(" 9 ", |s| display_char(s, '9')))
+        .child(Button::new_raw(" E ", |s| display_char(s, 'E')).with_name("E"))
         .child(Button::new_raw(" * ", |s| store_op(s, Op::Mul)));
 
     let fourth = LinearLayout::horizontal()
-        .child(Button::new_raw(" 0 ", |s| display_helper(s, '0')))
-        .child(Button::new_raw(" A ", |s| display_helper(s, 'A')).with_name("A"))
-        .child(Button::new_raw(" B ", |s| display_helper(s, 'B')).with_name("B"))
-        .child(Button::new_raw(" F ", |s| display_helper(s, 'F')).with_name("F"))
+        .child(Button::new_raw(" 0 ", |s| display_char(s, '0')))
+        .child(Button::new_raw(" A ", |s| display_char(s, 'A')).with_name("A"))
+        .child(Button::new_raw(" B ", |s| display_char(s, 'B')).with_name("B"))
+        .child(Button::new_raw(" F ", |s| display_char(s, 'F')).with_name("F"))
         .child(Button::new_raw(" / ", |s| store_op(s, Op::Div)))
         .child(Button::new_raw(" = ", |s| perform_calc(s)));
 
@@ -72,9 +72,13 @@ fn main() -> Result<()> {
 
     layout = layout.child(input_row);
     layout = layout.child(bin_board_row_1);
-    layout = layout.child(TextView::new("63      56      48     40     32"));
+    layout = layout.child(TextView::new("63      56      48     40     32").style(
+        ColorStyle::new(Color::Rgb(50, 99, 81), Color::Rgb(77, 255, 195)),
+    ));
     layout = layout.child(bin_board_row_2);
-    layout = layout.child(TextView::new("31      24      16     8       0"));
+    layout = layout.child(TextView::new("31      24      16     8       0").style(
+        ColorStyle::new(Color::Rgb(50, 99, 81), Color::Rgb(77, 255, 195)),
+    ));
 
     layout = layout.child(mode_row);
     layout = layout.child(first);
@@ -91,7 +95,7 @@ fn main() -> Result<()> {
         should_clear: false,
         bin: vec![false; 64],
         mode_group,
-        mode: Mode::Hex,
+        mode: Mode::Dec,
     };
     siv.set_user_data(state);
 
@@ -165,7 +169,7 @@ fn bin_board_helper(s: &mut Cursive, i: usize) {
     tb.set_content(&result.to_string());
 }
 
-fn display_helper(s: &mut Cursive, c: char) {
+fn display_char(s: &mut Cursive, c: char) {
     let mut tb: ViewRef<EditView> = s.find_name("input").unwrap();
     let input = &*tb.get_content();
     let mut input = input.clone();
