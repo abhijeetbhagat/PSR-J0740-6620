@@ -4,6 +4,7 @@ use cursive::traits::*;
 use cursive::views::{Button, Dialog, EditView, LinearLayout, TextView, ViewRef};
 use std::rc::Rc;
 mod numpad;
+use clipboard::{ClipboardContext, ClipboardProvider};
 use cursive::vec::Vec2;
 use cursive::Cursive;
 use cursive::Printer;
@@ -31,7 +32,7 @@ fn main() -> Result<()> {
         .child(Button::new_raw(" 3 ", |s| display_helper(s, '3')))
         .child(Button::new_raw(" C ", |s| display_helper(s, 'C')))
         .child(Button::new_raw(" + ", |s| store_op(s, Op::Add)))
-        .child(Button::new_raw(" << ", |s| store_op(s, Op::Lsh)));
+        .child(Button::new_raw(" << ", |s| store_op(s, Op::Lsh)))
         .child(Button::new_raw(" >> ", |s| store_op(s, Op::Rsh)));
 
     let second = LinearLayout::horizontal()
@@ -40,7 +41,7 @@ fn main() -> Result<()> {
         .child(Button::new_raw(" 6 ", |s| display_helper(s, '6')))
         .child(Button::new_raw(" D ", |s| display_helper(s, 'D')))
         .child(Button::new_raw(" - ", |s| store_op(s, Op::Sub)))
-        .child(Button::new_raw(" & ", |s| store_op(s, Op::And)));
+        .child(Button::new_raw(" & ", |s| store_op(s, Op::And)))
         .child(Button::new_raw(" | ", |s| store_op(s, Op::Or)));
 
     let third = LinearLayout::horizontal()
@@ -48,7 +49,7 @@ fn main() -> Result<()> {
         .child(Button::new_raw(" 8 ", |s| display_helper(s, '8')))
         .child(Button::new_raw(" 9 ", |s| display_helper(s, '9')))
         .child(Button::new_raw(" E ", |s| display_helper(s, 'E')))
-        .child(Button::new_raw(" * ", |s| store_op(s, Op::Mul)))
+        .child(Button::new_raw(" * ", |s| store_op(s, Op::Mul)));
 
     let fourth = LinearLayout::horizontal()
         .child(Button::new_raw(" 0 ", |s| display_helper(s, '0')))
@@ -59,8 +60,17 @@ fn main() -> Result<()> {
         .child(Button::new_raw(" = ", |s| perform_calc(s)));
 
     let input_row = LinearLayout::horizontal()
-        .child(EditView::new().with_name("input").fixed_width(20))
-        .child(Button::new_raw("AC", |s| all_clear(s)));
+        .child(
+            EditView::new()
+                .style(ColorStyle::new(
+                    Color::Dark(BaseColor::Black),
+                    Color::Rgb(26, 128, 111),
+                ))
+                .with_name("input")
+                .fixed_width(20),
+        )
+        .child(Button::new_raw(" AC ", |s| all_clear(s)))
+        .child(Button::new_raw(" cp ", |s| cp(s)));
 
     layout = layout.child(input_row);
     layout = layout.child(bin_board_row_1);
@@ -76,6 +86,16 @@ fn main() -> Result<()> {
 
     siv.add_layer(layout);
     siv.add_global_callback('q', |s| s.quit());
+
+    let mut theme = siv.current_theme().clone();
+    theme.borders = BorderStyle::Simple;
+    let mut palette = Palette::default();
+    palette[PaletteColor::Primary] = Color::Dark(BaseColor::Black);
+    // palette[PaletteColor::View] = Color::Light(BaseColor::Red);
+    palette[PaletteColor::View] = Color::Rgb(77, 255, 195);
+    theme.palette = palette;
+    siv.set_theme(theme);
+
     siv.run();
     Ok(())
 }
@@ -200,4 +220,12 @@ fn all_clear(s: &mut Cursive) {
         data.op1 = 0;
         tb.set_content("");
     });
+}
+
+fn cp(s: &mut Cursive) {
+    let tb: ViewRef<EditView> = s.find_name("input").unwrap();
+    let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
+    let input = &*tb.get_content();
+    let input = input.clone();
+    ctx.set_contents(input);
 }
