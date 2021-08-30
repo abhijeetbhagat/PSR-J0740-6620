@@ -2,7 +2,7 @@ use anyhow::Result;
 use cursive::theme::{BaseColor, BorderStyle, Color, ColorStyle, Palette, PaletteColor};
 use cursive::traits::*;
 use cursive::views::{
-    Button, Dialog, EditView, LinearLayout, RadioButton, RadioGroup, TextView, ViewRef,
+    Button, Dialog, EditView, LinearLayout, Panel, RadioButton, RadioGroup, TextView, ViewRef,
 };
 use std::rc::Rc;
 mod numpad;
@@ -80,7 +80,7 @@ fn main() -> Result<()> {
         ColorStyle::new(Color::Rgb(50, 99, 81), Color::Rgb(77, 255, 195)),
     ));
 
-    layout = layout.child(mode_row);
+    layout = layout.child(Panel::new(mode_row));
     layout = layout.child(first);
     layout = layout.child(second);
     layout = layout.child(third);
@@ -213,18 +213,7 @@ fn create_bin_board_row(lsb: usize, msb: usize) -> LinearLayout {
 }
 
 fn perform_calc(s: &mut Cursive) {
-    /*
-    let mut theme = s.current_theme().clone();
-    theme.borders = BorderStyle::Simple;
-    let mut palette = Palette::default();
-    palette[PaletteColor::Primary] = Color::Light(BaseColor::Red);
-    palette[PaletteColor::View] = Color::Light(BaseColor::Red);
-    theme.palette = palette;
-
-    s.set_theme(theme);
-    */
     let mut tb: ViewRef<EditView> = s.find_name("input").unwrap();
-    // let hex_button: ViewRef<RadioButton<Mode>> = s.find_name("Hex").unwrap();
 
     let input = &*tb.get_content();
     let input = input.clone();
@@ -236,6 +225,7 @@ fn perform_calc(s: &mut Cursive) {
         };
         data.op1 = calculate(data);
         tb.set_content(&data.op1.to_string());
+        data.should_clear = true;
     });
 }
 
@@ -258,15 +248,22 @@ fn cp(s: &mut Cursive) {
 
 fn on_mode_change(s: &mut Cursive, mode: &Mode) {
     let buttons = ["A", "B", "C", "D", "E", "F"];
-    if *mode == Mode::Dec {
+    let mut tb: ViewRef<EditView> = s.find_name("input").unwrap();
+    let input = &*tb.get_content();
+    let input = input.clone();
+
+    let input = if *mode == Mode::Dec {
         for button in buttons.iter() {
             let mut button: ViewRef<Button> = s.find_name(button).unwrap();
             button.disable();
         }
+        u64::from_str_radix(&input, 16).unwrap().to_string()
     } else {
         for button in buttons.iter() {
             let mut button: ViewRef<Button> = s.find_name(button).unwrap();
             button.enable();
         }
-    }
+        format!("{:X}", input.parse::<u64>().unwrap())
+    };
+    tb.set_content(&input);
 }
