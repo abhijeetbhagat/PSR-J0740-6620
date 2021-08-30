@@ -224,7 +224,12 @@ fn perform_calc(s: &mut Cursive) {
             input.parse().unwrap()
         };
         data.op1 = calculate(data);
-        tb.set_content(&data.op1.to_string());
+        let formatted_output = if *data.mode_group.selection() == Mode::Hex {
+            format!("{:X}", data.op1)
+        } else {
+            data.op1.to_string()
+        };
+        tb.set_content(&formatted_output);
         data.should_clear = true;
     });
 }
