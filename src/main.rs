@@ -262,13 +262,15 @@ fn on_mode_change(s: &mut Cursive, mode: &Mode) {
             let mut button: ViewRef<Button> = s.find_name(button).unwrap();
             button.disable();
         }
-        u64::from_str_radix(&input, 16).unwrap().to_string()
+        u64::from_str_radix(&input, 16).map_or_else(|_| "".into(), |num| num.to_string())
     } else {
         for button in buttons.iter() {
             let mut button: ViewRef<Button> = s.find_name(button).unwrap();
             button.enable();
         }
-        format!("{:X}", input.parse::<u64>().unwrap())
+        input
+            .parse::<u64>()
+            .map_or_else(|_| "".to_string(), |num| format!("{:X}", num))
     };
     tb.set_content(&input);
 }
