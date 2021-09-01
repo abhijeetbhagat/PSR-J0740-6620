@@ -1,6 +1,8 @@
 use cursive::view::View;
 use cursive::views::{RadioButton, RadioGroup};
 use cursive::Printer;
+
+#[derive(Clone)]
 pub(crate) enum Op {
     Add,
     Sub,
@@ -13,12 +15,13 @@ pub(crate) enum Op {
     Or,
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub(crate) enum Mode {
     Hex,
     Dec,
 }
 
+#[derive(Clone)]
 pub(crate) struct Calc {
     pub(crate) op1: u64,
     pub(crate) op2: u64,
@@ -27,6 +30,8 @@ pub(crate) struct Calc {
     pub(crate) bin: Vec<bool>,
     pub(crate) mode: Mode,
     pub(crate) mode_group: RadioGroup<Mode>,
+    pub(crate) shortcut_activated: bool,
+    pub(crate) shortcut: String,
 }
 
 struct Numpad;

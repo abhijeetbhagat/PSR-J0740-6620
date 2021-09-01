@@ -1,8 +1,10 @@
 use anyhow::Result;
+use cursive::event::Key;
 use cursive::theme::{BaseColor, BorderStyle, Color, ColorStyle, Palette, PaletteColor};
 use cursive::traits::*;
 use cursive::views::{
-    Button, Dialog, EditView, LinearLayout, Panel, RadioButton, RadioGroup, TextView, ViewRef,
+    Button, Dialog, EditView, LinearLayout, OnEventView, Panel, RadioButton, RadioGroup, TextView,
+    ViewRef,
 };
 use std::rc::Rc;
 mod numpad;
@@ -96,11 +98,100 @@ fn main() -> Result<()> {
         bin: vec![false; 64],
         mode_group,
         mode: Mode::Dec,
+        shortcut: String::new(),
+        shortcut_activated: false,
     };
     siv.set_user_data(state);
 
-    siv.add_layer(layout);
+    siv.add_layer(
+        OnEventView::new(layout)
+            .on_event(':', |s| {
+                s.with_user_data(|data: &mut Calc| {
+                    data.shortcut_activated = true;
+                });
+            })
+            .on_event('0', |s| {
+                s.with_user_data(|data: &mut Calc| {
+                    if data.shortcut_activated && data.shortcut.len() > 2 {
+                        data.shortcut.push('0')
+                    }
+                });
+            })
+            .on_event('1', |s| {
+                s.with_user_data(|data: &mut Calc| {
+                    if data.shortcut_activated {
+                        data.shortcut.push('1')
+                    }
+                });
+            })
+            .on_event('2', |s| {
+                s.with_user_data(|data: &mut Calc| {
+                    if data.shortcut_activated {
+                        data.shortcut.push('2')
+                    }
+                });
+            })
+            .on_event('3', |s| {
+                s.with_user_data(|data: &mut Calc| {
+                    if data.shortcut_activated {
+                        data.shortcut.push('3')
+                    }
+                });
+            })
+            .on_event('4', |s| {
+                s.with_user_data(|data: &mut Calc| {
+                    if data.shortcut_activated {
+                        data.shortcut.push('4')
+                    }
+                });
+            })
+            .on_event('5', |s| {
+                s.with_user_data(|data: &mut Calc| {
+                    if data.shortcut_activated {
+                        data.shortcut.push('5')
+                    }
+                });
+            })
+            .on_event('6', |s| {
+                s.with_user_data(|data: &mut Calc| {
+                    if data.shortcut_activated {
+                        data.shortcut.push('6')
+                    }
+                });
+            })
+            .on_event('7', |s| {
+                s.with_user_data(|data: &mut Calc| {
+                    if data.shortcut_activated {
+                        data.shortcut.push('7')
+                    }
+                });
+            })
+            .on_event('8', |s| {
+                s.with_user_data(|data: &mut Calc| {
+                    if data.shortcut_activated {
+                        data.shortcut.push('8')
+                    }
+                });
+            })
+            .on_event('9', |s| {
+                s.with_user_data(|data: &mut Calc| {
+                    if data.shortcut_activated {
+                        data.shortcut.push('9')
+                    }
+                });
+            })
+            .on_event(' ', |s| {
+                let state = s.user_data::<Calc>().unwrap().clone();
+                if state.shortcut_activated && !state.shortcut.is_empty() {
+                    let bit_num: usize = state.shortcut.parse().unwrap();
+                    bin_board_helper(s, 63 - bit_num);
+                } else {
+                    // perform calc
+                }
+            }),
+    );
     siv.add_global_callback('q', |s| s.quit());
+    // siv.add_global_callback(':', |s| s.on_event();
 
     let mut theme = siv.current_theme().clone();
     theme.borders = BorderStyle::Simple;
@@ -112,21 +203,6 @@ fn main() -> Result<()> {
 
     siv.run();
     Ok(())
-}
-
-struct TestView {}
-
-impl View for TestView {
-    fn draw(&self, printer: &Printer<'_, '_>) {
-        printer.with_color(
-            ColorStyle::new(Color::Dark(BaseColor::Red), Color::Dark(BaseColor::Black)),
-            |printer| printer.print((0, 0), &format!("{:^4}", "abhi")),
-        );
-    }
-
-    fn required_size(&mut self, _: Vec2) -> Vec2 {
-        (23, 8).into()
-    }
 }
 
 fn calculate(data: &Calc) -> u64 {
@@ -145,6 +221,10 @@ fn calculate(data: &Calc) -> u64 {
 
 #[inline]
 fn bin_board_helper(s: &mut Cursive, i: usize) {
+    if i > 63 {
+        return;
+    }
+
     let mut button = s.find_name::<Button>(&i.to_string()).unwrap();
 
     /*
@@ -157,8 +237,6 @@ fn bin_board_helper(s: &mut Cursive, i: usize) {
     s.add_layer(d);
     */
 
-    let mut tb: ViewRef<EditView> = s.find_name::<EditView>("input").unwrap();
-
     let data = s.user_data::<Calc>().unwrap();
     button.set_label_raw(if data.bin[i] { "0" } else { "1" });
     data.bin[i] = !data.bin[i];
@@ -166,6 +244,10 @@ fn bin_board_helper(s: &mut Cursive, i: usize) {
     for idx in (0..64).rev() {
         result |= (data.bin[idx] as u64) << 63 - idx;
     }
+    data.shortcut.clear();
+    data.shortcut_activated = false;
+
+    let mut tb: ViewRef<EditView> = s.find_name::<EditView>("input").unwrap();
     tb.set_content(&result.to_string());
 }
 
