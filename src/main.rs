@@ -191,7 +191,7 @@ fn main() -> Result<()> {
             }),
     );
     siv.add_global_callback('q', |s| s.quit());
-    // siv.add_global_callback(':', |s| s.on_event();
+    siv.focus_name("0");
 
     let mut theme = siv.current_theme().clone();
     theme.borders = BorderStyle::Simple;
