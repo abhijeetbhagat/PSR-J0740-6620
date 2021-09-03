@@ -110,88 +110,26 @@ fn main() -> Result<()> {
                     data.shortcut_activated = true;
                 });
             })
-            .on_event('0', |s| {
-                s.with_user_data(|data: &mut Calc| {
-                    if data.shortcut_activated && data.shortcut.len() > 2 {
-                        data.shortcut.push('0')
-                    }
-                });
-            })
-            .on_event('1', |s| {
-                s.with_user_data(|data: &mut Calc| {
-                    if data.shortcut_activated {
-                        data.shortcut.push('1')
-                    }
-                });
-            })
-            .on_event('2', |s| {
-                s.with_user_data(|data: &mut Calc| {
-                    if data.shortcut_activated {
-                        data.shortcut.push('2')
-                    }
-                });
-            })
-            .on_event('3', |s| {
-                s.with_user_data(|data: &mut Calc| {
-                    if data.shortcut_activated {
-                        data.shortcut.push('3')
-                    }
-                });
-            })
-            .on_event('4', |s| {
-                s.with_user_data(|data: &mut Calc| {
-                    if data.shortcut_activated {
-                        data.shortcut.push('4')
-                    }
-                });
-            })
-            .on_event('5', |s| {
-                s.with_user_data(|data: &mut Calc| {
-                    if data.shortcut_activated {
-                        data.shortcut.push('5')
-                    }
-                });
-            })
-            .on_event('6', |s| {
-                s.with_user_data(|data: &mut Calc| {
-                    if data.shortcut_activated {
-                        data.shortcut.push('6')
-                    }
-                });
-            })
-            .on_event('7', |s| {
-                s.with_user_data(|data: &mut Calc| {
-                    if data.shortcut_activated {
-                        data.shortcut.push('7')
-                    }
-                });
-            })
-            .on_event('8', |s| {
-                s.with_user_data(|data: &mut Calc| {
-                    if data.shortcut_activated {
-                        data.shortcut.push('8')
-                    }
-                });
-            })
-            .on_event('9', |s| {
-                s.with_user_data(|data: &mut Calc| {
-                    if data.shortcut_activated {
-                        data.shortcut.push('9')
-                    }
-                });
-            })
+            .on_event('0', |s| append_shortcut(s, '0'))
+            .on_event('1', |s| append_shortcut(s, '1'))
+            .on_event('2', |s| append_shortcut(s, '2'))
+            .on_event('3', |s| append_shortcut(s, '3'))
+            .on_event('4', |s| append_shortcut(s, '4'))
+            .on_event('5', |s| append_shortcut(s, '5'))
+            .on_event('6', |s| append_shortcut(s, '6'))
+            .on_event('7', |s| append_shortcut(s, '7'))
+            .on_event('8', |s| append_shortcut(s, '8'))
+            .on_event('9', |s| append_shortcut(s, '9'))
             .on_event(' ', |s| {
                 let state = s.user_data::<Calc>().unwrap().clone();
                 if state.shortcut_activated && !state.shortcut.is_empty() {
                     let bit_num: usize = state.shortcut.parse().unwrap();
-                    bin_board_helper(s, 63 - bit_num);
-                } else {
-                    // perform calc
+                    toggle_bit(s, 63 - bit_num);
                 }
             }),
     );
     siv.add_global_callback('q', |s| s.quit());
-    siv.focus_name("0");
+    siv.focus_name("0").unwrap();
 
     let mut theme = siv.current_theme().clone();
     theme.borders = BorderStyle::Simple;
@@ -203,6 +141,14 @@ fn main() -> Result<()> {
 
     siv.run();
     Ok(())
+}
+
+fn append_shortcut(s: &mut Cursive, c: char) {
+    s.with_user_data(|data: &mut Calc| {
+        if data.shortcut_activated && !data.shortcut.len() > 2 {
+            data.shortcut.push(c)
+        }
+    });
 }
 
 fn calculate(data: &Calc) -> u64 {
@@ -220,7 +166,7 @@ fn calculate(data: &Calc) -> u64 {
 }
 
 #[inline]
-fn bin_board_helper(s: &mut Cursive, i: usize) {
+fn toggle_bit(s: &mut Cursive, i: usize) {
     if i > 63 {
         return;
     }
@@ -286,7 +232,7 @@ fn create_bin_board_row(lsb: usize, msb: usize) -> LinearLayout {
     for i in lsb..msb {
         bin_board = bin_board.child(
             Button::new_raw("0", move |s| {
-                bin_board_helper(s, i);
+                toggle_bit(s, i);
             })
             .with_name(&i.to_string()),
         );
