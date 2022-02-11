@@ -126,7 +126,14 @@ fn main() -> Result<()> {
                     let bit_num: usize = state.shortcut.parse().unwrap();
                     toggle_bit(s, 63 - bit_num);
                 }
-            }),
+            })
+            .on_event('+', |s| store_op(s, Op::Add))
+            .on_event('-', |s| store_op(s, Op::Add))
+            .on_event('*', |s| store_op(s, Op::Add))
+            .on_event('/', |s| store_op(s, Op::Add))
+            .on_event('=', |s| perform_calc(s))
+            .on_event(Key::Backspace, |s| trim_input(s))
+            .on_event(Key::Esc, |s| all_clear(s)),
     );
     siv.add_global_callback('q', |s| s.quit());
     siv.focus_name("0").unwrap();
@@ -144,11 +151,12 @@ fn main() -> Result<()> {
 }
 
 fn append_shortcut(s: &mut Cursive, c: char) {
-    s.with_user_data(|data: &mut Calc| {
-        if data.shortcut_activated && !data.shortcut.len() > 2 {
-            data.shortcut.push(c)
-        }
-    });
+    let data = s.user_data::<Calc>().unwrap();
+    if data.shortcut_activated && !data.shortcut.len() > 2 {
+        data.shortcut.push(c)
+    } else {
+        display_char(s, c)
+    }
 }
 
 fn calculate(data: &Calc) -> u64 {
@@ -208,6 +216,16 @@ fn display_char(s: &mut Cursive, c: char) {
     }
     input.push(c);
 
+    tb.set_content(input.as_str());
+}
+
+// backspace handler
+fn trim_input(s: &mut Cursive) {
+    let mut tb: ViewRef<EditView> = s.find_name("input").unwrap();
+    let input = &*tb.get_content();
+    let mut input = input.clone();
+    let state = s.user_data::<Calc>().unwrap();
+    input.pop();
     tb.set_content(input.as_str());
 }
 
