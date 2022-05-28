@@ -128,9 +128,9 @@ fn main() -> Result<()> {
                 }
             })
             .on_event('+', |s| store_op(s, Op::Add))
-            .on_event('-', |s| store_op(s, Op::Add))
-            .on_event('*', |s| store_op(s, Op::Add))
-            .on_event('/', |s| store_op(s, Op::Add))
+            .on_event('-', |s| store_op(s, Op::Sub))
+            .on_event('*', |s| store_op(s, Op::Mul))
+            .on_event('/', |s| store_op(s, Op::Div))
             .on_event('=', |s| perform_calc(s))
             .on_event(Key::Backspace, |s| trim_input(s))
             .on_event(Key::Esc, |s| all_clear(s)),
